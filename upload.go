@@ -47,13 +47,8 @@ func saveFile(src multipart.File, location, ID, ext string, size uint) (string, 
 	path := "." + location + name
 	var img image.Image
 	var op jpeg.Options
+	var err error
 	op.Quality = 50
-
-	dst, err := os.Create(path)
-	if err != nil {
-		return "", err
-	}
-	defer dst.Close()
 
 	switch extMap[ext] {
 	case JPG:
@@ -74,6 +69,12 @@ func saveFile(src multipart.File, location, ID, ext string, size uint) (string, 
 	default:
 		return "", errors.New("file is not an image")
 	}
+
+	dst, err := os.Create(path)
+	if err != nil {
+		return "", err
+	}
+	defer dst.Close()
 
 	if err := jpeg.Encode(dst, img, &op); err != nil {
 		return "", err
