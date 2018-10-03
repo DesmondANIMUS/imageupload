@@ -42,18 +42,13 @@ func UploadFile(r *http.Request, location string, ID string, size uint) (string,
 }
 
 // SaveFile function helps in uploading the profile picture of user
-func saveFile(src multipart.File, location, id, ext string, size uint) (string, error) {
-	name := id + ".jpg"
+func saveFile(src multipart.File, location, ID, ext string, size uint) (string, error) {
+	name := ID + ".jpg"
 	path := "." + location + name
 	var img image.Image
 	var op jpeg.Options
+	var err error
 	op.Quality = 50
-
-	dst, err := os.Create(path)
-	if err != nil {
-		return "", err
-	}
-	defer dst.Close()
 
 	switch extMap[ext] {
 	case JPG:
@@ -72,8 +67,14 @@ func saveFile(src multipart.File, location, id, ext string, size uint) (string, 
 			return "", err
 		}
 	default:
-		return "", errors.New("File is not an image")
+		return "", errors.New("file is not an image")
 	}
+
+	dst, err := os.Create(path)
+	if err != nil {
+		return "", err
+	}
+	defer dst.Close()
 
 	if err := jpeg.Encode(dst, img, &op); err != nil {
 		return "", err
