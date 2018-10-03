@@ -6,7 +6,7 @@ import (
 	"image/gif"
 	"image/jpeg"
 	"image/png"
-	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"strings"
@@ -16,14 +16,6 @@ import (
 
 var extMap map[string]int
 
-var fs fileSystem = osFS{}
-
-var ErrFileNotSupported = errors.New("file is not an image")
-
-func init() {
-	initExtMap()
-}
-
 // UploadFile function is a simple helper function that uploads and saves an image on the server
 // Params:
 // r: to get the picture from multi-part form using key "get_picture"
@@ -31,6 +23,7 @@ func init() {
 // ID: unique string ID for the image
 // size: to resize the image, the function will keep the aspect ratio intact
 func UploadFile(r *http.Request, location string, ID string, size uint) (string, error) {
+	initExtMap()
 	var path string
 	file, hdr, err := r.FormFile("get_picture")
 	if err != nil {
@@ -49,20 +42,20 @@ func UploadFile(r *http.Request, location string, ID string, size uint) (string,
 }
 
 // SaveFile function helps in uploading the profile picture of user
-func saveFile(src io.Reader, location, id, ext string, size uint) (string, error) {
+func saveFile(src multipart.File, location, id, ext string, size uint) (string, error) {
 	name := id + ".jpg"
 	path := "." + location + name
 	var img image.Image
 	var op jpeg.Options
 	op.Quality = 50
-	var err error
 
-	e, ok := extMap[ext]
-	if !ok {
-		return "", ErrFileNotSupported
+	dst, err := os.Create(path)
+	if err != nil {
+		return "", err
 	}
+	defer dst.Close()
 
-	switch e {
+	switch extMap[ext] {
 	case JPG:
 		img, err = decodeJPG(src, size)
 		if err != nil {
@@ -78,13 +71,9 @@ func saveFile(src io.Reader, location, id, ext string, size uint) (string, error
 		if err != nil {
 			return "", err
 		}
+	default:
+		return "", errors.New("File is not an image")
 	}
-
-	dst, err := fs.Create(path)
-	if err != nil {
-		return "", err
-	}
-	defer dst.Close()
 
 	if err := jpeg.Encode(dst, img, &op); err != nil {
 		return "", err
@@ -95,21 +84,21 @@ func saveFile(src io.Reader, location, id, ext string, size uint) (string, error
 }
 
 // DecodeJPG function decodes JPG image
-func decodeJPG(src io.Reader, size uint) (image.Image, error) {
+func decodeJPG(src multipart.File, size uint) (image.Image, error) {
 	img, err := jpeg.Decode(src)
 	img = resize.Resize(size, 0, img, resize.Lanczos3)
 	return img, err
 }
 
 // DecodePNG function decodes PNG image
-func decodePNG(src io.Reader, size uint) (image.Image, error) {
+func decodePNG(src multipart.File, size uint) (image.Image, error) {
 	img, err := png.Decode(src)
 	img = resize.Resize(size, 0, img, resize.Lanczos3)
 	return img, err
 }
 
 // DecodeGIF function decodes GIF image
-func decodeGIF(src io.Reader, size uint) (image.Image, error) {
+func decodeGIF(src multipart.File, size uint) (image.Image, error) {
 	img, err := gif.Decode(src)
 	img = resize.Resize(size, 0, img, resize.Lanczos3)
 	return img, err
@@ -146,17 +135,3 @@ func reverse(txt string) string {
 
 	return string(result)
 }
-
-type fileSystem interface {
-	Create(name string) (file, error)
-}
-
-type file interface {
-	io.Closer
-	io.Writer
-}
-
-// osFS implements fileSystem using the local disk.
-type osFS struct{}
-
-func (osFS) Create(name string) (file, error) { return os.Create(name) }
