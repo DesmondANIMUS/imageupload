@@ -56,7 +56,6 @@ func saveFile(src io.Reader, location, ID, ext string, size uint) (string, error
 	var op jpeg.Options
 	var err error
 	op.Quality = 50
-	var err error
 
 	e, ok := extMap[ext]
 	if !ok {
