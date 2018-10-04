@@ -97,22 +97,28 @@ func saveFile(src io.Reader, location, ID, ext string, size uint) (string, error
 // DecodeJPG function decodes JPG image
 func decodeJPG(src io.Reader, size uint) (image.Image, error) {
 	img, err := jpeg.Decode(src)
-	img = resize.Resize(size, 0, img, resize.Lanczos3)
-	return img, err
+	if err != nil {
+		return nil, err
+	}
+	return resize.Resize(size, 0, img, resize.Lanczos3), nil
 }
 
 // DecodePNG function decodes PNG image
 func decodePNG(src io.Reader, size uint) (image.Image, error) {
 	img, err := png.Decode(src)
-	img = resize.Resize(size, 0, img, resize.Lanczos3)
-	return img, err
+	if err != nil {
+		return nil, err
+	}
+	return resize.Resize(size, 0, img, resize.Lanczos3), nil
 }
 
 // DecodeGIF function decodes GIF image
 func decodeGIF(src io.Reader, size uint) (image.Image, error) {
 	img, err := gif.Decode(src)
-	img = resize.Resize(size, 0, img, resize.Lanczos3)
-	return img, err
+	if err != nil {
+		return nil, err
+	}
+	return resize.Resize(size, 0, img, resize.Lanczos3), nil
 }
 
 func initExtMap() {
