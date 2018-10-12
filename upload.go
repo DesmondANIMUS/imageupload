@@ -11,6 +11,9 @@ import (
 	"os"
 	"strings"
 
+	"golang.org/x/image/bmp"
+	"golang.org/x/image/tiff"
+
 	"github.com/nfnt/resize"
 )
 
@@ -78,6 +81,16 @@ func saveFile(src io.Reader, location, ID, ext string, size uint) (string, error
 		if err != nil {
 			return "", err
 		}
+	case BMP:
+		img, err = DecodeBMP(src, size)
+		if err != nil {
+			return "", err
+		}
+	case TIFF:
+		img, err = DecodeTIFF(src, size)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	dst, err := fs.Create(path)
@@ -92,6 +105,24 @@ func saveFile(src io.Reader, location, ID, ext string, size uint) (string, error
 
 	path = location + name
 	return path, err
+}
+
+// DecodeTIFF function decodes TIFF image
+func DecodeTIFF(src io.Reader, size uint) (image.Image, error) {
+	img, err := tiff.Decode(src)
+	if err != nil {
+		return nil, err
+	}
+	return resize.Resize(size, 0, img, resize.Lanczos3), nil
+}
+
+// DecodeBMP function decodes BMP image
+func DecodeBMP(src io.Reader, size uint) (image.Image, error) {
+	img, err := bmp.Decode(src)
+	if err != nil {
+		return nil, err
+	}
+	return resize.Resize(size, 0, img, resize.Lanczos3), nil
 }
 
 // DecodeJPG function decodes JPG image
@@ -134,6 +165,14 @@ func initExtMap() {
 
 	extMap["gif"] = GIF
 	extMap["GIF"] = GIF
+
+	extMap["BMP"] = BMP
+	extMap["bmp"] = BMP
+
+	extMap["TIFF"] = TIFF
+	extMap["TIF"] = TIFF
+	extMap["tiff"] = TIFF
+	extMap["tif"] = TIFF
 }
 
 func getExt(filename string) string {

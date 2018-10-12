@@ -39,6 +39,20 @@ func TestGIFDecodeFail(t *testing.T) {
 	}
 }
 
+func TestBMPDecodeFail(t *testing.T) {
+	_, err := saveFile(strings.NewReader("nop"), "/", "testID", "bmp", 0)
+	if err == nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+}
+
+func TestTIFFDecodeFail(t *testing.T) {
+	_, err := saveFile(strings.NewReader("nop"), "/", "testID", "tiff", 0)
+	if err == nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+}
+
 func TestJPGHappyPath(t *testing.T) {
 	p, err := saveFile(bytes.NewReader(testJPGImage), "/", "testID", "jpg", 0)
 	if err != nil {

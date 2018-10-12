@@ -2,7 +2,9 @@ package imageupload
 
 // Global Constants
 const (
-	GIF = 2
-	PNG = 1
-	JPG = 0
+	TIFF = 4
+	BMP  = 3
+	GIF  = 2
+	PNG  = 1
+	JPG  = 0
 )
